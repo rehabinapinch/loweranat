@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muscle Flashcards</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+        .flashcard {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 300px;
+            margin: 20px auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .flashcard:hover {
+            transform: scale(1.05);
+        }
+        .question {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .answer {
+            display: none;
+            margin-top: 10px;
+            font-style: italic;
+            color: #007BFF;
+        }
+        .answer.show {
+            display: block;
+        }
+        .button-container {
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #B19CD9;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin: 10px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+     <h1>Lower Limb Flashcards</h1>
+
+<div id="flashcardContainer"></div>
+
+<div class="button-container">
+    <button id="prevButton">Last 3 Flashcards</button>
+    <button id="nextButton">Next 3 Flashcards</button>
+    <button id="randomButton">Randomize 3 Flashcards</button>
+</div>
+
+<script>
+const muscleData = [
+    {
+        "muscle": "Erector Spinae",
+        "origin": "Iliac crest; sacrum; lumbar vertebrae",
+        "insertion": "Ribs; thoracic and cervical vertebrae",
+        "function": "Extends and laterally flexes spine",
+        "nerve": "Dorsal rami of spinal nerves",
+        "submuscles": {
+            "Iliocostalis": {
+                "segments": ["lumbaris", "thoracic", "cervicis"]
+            },
+            "Longissimus": {
+                "segments": ["thoracic", "cervicis", "capitis"]
+            },
+            "Spinalis": {
+                "segments": ["thoracic", "cervicis", "capitis"]
+            }
+        }
+    },
+    {
+        "muscle": "Transverso-spinalis",
+        "origin": "Transverse processes of vertebrae",
+        "insertion": "Spinous processes of vertebrae",
+        "function": "Extends and rotates spine",
+        "nerve": "Dorsal rami of spinal nerves"
+    },
+    {
+        "muscle": "Interspinalis",
+        "origin": "Spinous processes of vertebrae",
+        "insertion": "Spinous processes of adjacent vertebrae",
+        "function": "Extends spine",
+        "nerve": "Dorsal rami of spinal nerves"
+    },
+    {
+        "muscle": "Intertransversarii",
+        "origin": "Transverse processes of vertebrae",
+        "insertion": "Transverse processes of adjacent vertebrae",
+        "function": "Laterally flexes spine",
+        "nerve": "Dorsal rami of spinal nerves"
+    },
+    {
+        "muscle": "Levatores costarum",
+        "origin": "Transverse processes of thoracic vertebrae",
+        "insertion": "Ribs",
+        "function": "Elevates ribs",
+        "nerve": "Dorsal rami of thoracic spinal nerves"
+    },
+    {
+        "muscle": "Obliquus capitis superior",
+        "origin": "Transverse process of atlas (C1)",
+        "insertion": "Occipital bone",
+        "function": "Extends and laterally flexes head",
+        "nerve": "Suboccipital nerve"
+    },
+    {
+        "muscle": "Obliquus capitis inferior",
+        "origin": "Spinous process of axis (C2)",
+        "insertion": "Transverse process of atlas (C1)",
+        "function": "Rotates head",
+        "nerve": "Suboccipital nerve"
+    },
+    {
+        "muscle": "Rectus capitis posterior major",
+        "origin": "Spinous process of axis (C2)",
+        "insertion": "Occipital bone",
+        "function": "Extends and rotates head",
+        "nerve": "Suboccipital nerve"
+    },
+    {
+        "muscle": "Puborectalis",
+        "origin": "Pubic bone",
+        "insertion": "Rectum",
+        "function": "Supports pelvic viscera; maintains fecal continence",
+        "nerve": "Pudendal nerve (S2-S4)"
+    },
+    {
+        "muscle": "Pubococcygeous",
+        "origin": "Pubic bone",
+        "insertion": "Coccyx",
+        "function": "Supports pelvic viscera; helps in fecal continence",
+        "nerve": "Pudendal nerve (S2-S4)"
+    },
+    {
+        "muscle": "Iliococcygeous",
+        "origin": "Ischial spine",
+        "insertion": "Coccyx",
+        "function": "Supports pelvic viscera; helps in fecal continence",
+        "nerve": "Pudendal nerve (S2-S4)"
+    },
+    {
+        "muscle": "Coccygeous/ ischiococcygeous",
+        "origin": "Ischial spine",
+        "insertion": "Coccyx",
+        "function": "Supports pelvic viscera; assists in coccyx movement",
+        "nerve": "Pudendal nerve (S2-S4)"
+    },
+    {
+        "muscle": "External anal sphincter",
+        "origin": "Coccyx; anococcygeal ligament",
+        "insertion": "Encircles anal canal",
+        "function": "Closes anal canal",
+        "nerve": "Pudendal nerve (S2-S4)"
+    },
+    {
+        "muscle": "Superficial transverse perinei",
+        "origin": "Ischial tuberosity",
+        "insertion": "Perineal body",
+        "function": "Supports pelvic floor",
+        "nerve": "Pudendal nerve (S2-S4)"
+    },
+    {
+        "muscle": "Deep transverse perinei",
+        "origin": "Ischial tuberosity",
+        "insertion": "Perineal body",
+        "function": "Supports pelvic floor; stabilizes perineal body",
+        "nerve": "Pudendal nerve (S2-S4)"
+    },
+    {
+        "muscle": "Ischiocavernosus",
+        "origin": "Ischial tuberosity",
+        "insertion": "Crus of penis or clitoris",
+        "function": "Maintains erection by compressing outflow veins",
+        "nerve": "Pudendal nerve (S2-S4)"
+    },
+    {
+        "muscle": "Bulbospongiosus",
+        "origin": "Perineal body; bulb of penis or clitoris",
+        "insertion": "Perineal membrane; corpus spongiosum or clitoris",
+        "function": "Supports pelvic floor; aids in erection",
+        "nerve": "Pudendal nerve (S2-S4)"
+    },
+    {
+        "muscle": "Gluteus Maximus",
+        "origin": "Ilium; sacrum; coccyx",
+        "insertion": "Gluteal tuberosity of femur; iliotibial tract",
+        "function": "Extends and laterally rotates hip",
+        "nerve": "Inferior gluteal nerve (L5-S2)"
+    },
+    {
+        "muscle": "Gluteus medius",
+        "origin": "Iliac crest; outer surface of ilium",
+        "insertion": "Greater trochanter of femur",
+        "function": "Abducts and medially rotates hip",
+        "nerve": "Superior gluteal nerve (L4-S1)"
+    },
+    {
+        "muscle": "Gluteus minimus",
+        "origin": "Outer surface of ilium",
+        "insertion": "Greater trochanter of femur",
+        "function": "Abducts and medially rotates hip",
+        "nerve": "Superior gluteal nerve (L4-S1)"
+    },
+    {
+        "muscle": "Tensor Fascia Lata",
+        "origin": "Iliac crest",
+        "insertion": "Iliotibial tract",
+        "function": "Abducts and flexes hip; helps stabilize knee",
+        "nerve": "Superior gluteal nerve (L4-S1)"
+    },
+    {
+        "muscle": "Piriformis",
+        "origin": "Anterior surface of sacrum",
+        "insertion": "Greater trochanter of femur",
+        "function": "Laterally rotates and abducts hip",
+        "nerve": "Nerve to piriformis (S1-S2)"
+    },
+    {
+        "muscle": "Obturator Internus",
+        "origin": "Inner surface of obturator membrane; surrounding bone",
+        "insertion": "Greater trochanter of femur",
+        "function": "Laterally rotates hip",
+        "nerve": "Nerve to obturator internus (L5-S1)"
+    },
+    {
+        "muscle": "Superior gemellus",
+        "origin": "Ischial spine",
+        "insertion": "Greater trochanter of femur",
+        "function": "Laterally rotates hip",
+        "nerve": "Nerve to obturator internus (L5-S1)"
+    },
+    {
+        "muscle": "Inferior gemellus",
+        "origin": "Ischial tuberosity",
+        "insertion": "Greater trochanter of femur",
+        "function": "Laterally rotates hip",
+        "nerve": "Nerve to quadratus femoris (L5-S1)"
+    },
+    {
+        "muscle": "Quadratus Femoris",
+        "origin": "Ischial tuberosity",
+        "insertion": "Intertrochanteric crest of femur",
+        "function": "Laterally rotates hip",
+        "nerve": "Nerve to quadratus femoris (L5-S1)"
+    },
+    {
+        "muscle": "Psoas Major",
+        "origin": "Lumbar vertebrae",
+        "insertion": "Lesser trochanter of femur",
+        "function": "Flexes hip; assists in lateral flexion of lumbar spine",
+        "nerve": "Lumbar plexus (L1-L3)"
+    },
+    {
+        "muscle": "Iliacus",
+        "origin": "Iliac fossa",
+        "insertion": "Lesser trochanter of femur",
+        "function": "Flexes hip",
+        "nerve": "Femoral nerve (L2-L3)"
+    },
+    {
+        "muscle": "Sartorius",
+        "origin": "Anterior superior iliac spine (ASIS)",
+        "insertion": "Medial surface of tibia (pes anserinus)",
+        "function": "Flexes, abducts, and laterally rotates hip; flexes knee",
+        "nerve": "Femoral nerve (L2-L3)"
+    },
+    {
+        "muscle": "Rectus Femoris",
+        "origin": "Anterior inferior iliac spine (AIIS)",
+        "insertion": "Patella and tibial tuberosity",
+        "function": "Extends knee; flexes hip",
+        "nerve": "Femoral nerve (L2-L4)"
+    },
+    {
+        "muscle": "Vastus Lateralis",
+        "origin": "Greater trochanter; linea aspera",
+        "insertion": "Patella and tibial tuberosity",
+        "function": "Extends knee",
+        "nerve": "Femoral nerve (L2-L4)"
+    },
+    {
+        "muscle": "Vastus Medialis",
+        "origin": "Linea aspera; intertrochanteric line",
+        "insertion": "Patella and tibial tuberosity",
+        "function": "Extends knee",
+        "nerve": "Femoral nerve (L2-L4)"
+    },
+    {
+        "muscle": "Vastus Intermedius",
+        "origin": "Anterior and lateral surfaces of femur",
+        "insertion": "Patella and tibial tuberosity",
+        "function": "Extends knee",
+        "nerve": "Femoral nerve (L2-L4)"
+    },
+    {
+        "muscle": "Biceps Femoris",
+        "origin": "Long head: ischial tuberosity; Short head: linea aspera",
+        "insertion": "Head of fibula",
+        "function": "Flexes knee; extends hip",
+        "nerve": "Long head: Tibial nerve (L5-S2); Short head: Common fibular nerve (L5-S2)"
+    },
+    {
+        "muscle": "Semitendinosus",
+        "origin": "Ischial tuberosity",
+        "insertion": "Medial surface of tibia (pes anserinus)",
+        "function": "Flexes knee; extends hip",
+        "nerve": "Tibial nerve (L5-S2)"
+    },
+    {
+        "muscle": "Semimembranosus",
+        "origin": "Ischial tuberosity",
+        "insertion": "Medial condyle of tibia",
+        "function": "Flexes knee; extends hip",
+        "nerve": "Tibial nerve (L5-S2)"
+    },
+    {
+        "muscle": "Pectineus",
+        "origin": "Pectineal line of pubis",
+        "insertion": "Pectineal line of femur",
+        "function": "Adducts and flexes hip",
+        "nerve": "Femoral nerve (L2-L3)"
+    },
+    {
+        "muscle": "Adductor Longus",
+        "origin": "Pubic body",
+        "insertion": "Linea aspera of femur",
+        "function": "Adducts and flexes hip",
+        "nerve": "Obturator nerve (L2-L4)"
+    },
+    {
+        "muscle": "Adductor Brevis",
+        "origin": "Pubic body",
+        "insertion": "Linea aspera of femur",
+        "function": "Adducts and flexes hip",
+        "nerve": "Obturator nerve (L2-L4)"
+    },
+    {
+        "muscle": "Adductor Magnus",
+        "origin": "Pubic bone; ischial tuberosity",
+        "insertion": "Linea aspera and adductor tubercle of femur",
+        "function": "Adducts and extends hip",
+        "nerve": "Obturator nerve (L2-L4); Tibial nerve (L4)"
+    },
+    {
+        "muscle": "Gracilis",
+        "origin": "Pubic bone",
+        "insertion": "Medial surface of tibia (pes anserinus)",
+        "function": "Adducts hip; flexes knee",
+        "nerve": "Obturator nerve (L2-L3)"
+    },
+    {
+        "muscle": "Gastrocnemius",
+        "origin": "Medial and lateral condyles of femur",
+        "insertion": "Calcaneus via Achilles tendon",
+        "function": "Plantar flexes foot; flexes knee",
+        "nerve": "Tibial nerve (S1-S2)"
+    },
+    {
+        "muscle": "Soleus",
+        "origin": "Head and posterior surface of fibula; medial border of tibia",
+        "insertion": "Calcaneus via Achilles tendon",
+        "function": "Plantar flexes foot",
+        "nerve": "Tibial nerve (S1-S2)"
+    },
+    {
+        "muscle": "Plantaris",
+        "origin": "Lateral supracondylar line of femur",
+        "insertion": "Calcaneus via Achilles tendon",
+        "function": "Plantar flexes foot; flexes knee",
+        "nerve": "Tibial nerve (S1-S2)"
+    },
+    {
+        "muscle": "Popliteus",
+        "origin": "Lateral condyle of femur",
+        "insertion": "Posterior surface of tibia",
+        "function": "Unlocks knee; medially rotates tibia",
+        "nerve": "Tibial nerve (L4-S1)"
+    },
+    {
+        "muscle": "Tibialis Anterior",
+        "origin": "Lateral condyle and upper half of tibia",
+        "insertion": "Medial cuneiform; base of 1st metatarsal",
+        "function": "Dorsiflexes and inverts foot",
+        "nerve": "Deep fibular nerve (L4-L5)"
+    },
+    {
+        "muscle": "Extensor Digitorum Longus",
+        "origin": "Lateral condyle of tibia; anterior surface of fibula",
+        "insertion": "Middle and distal phalanges of toes 2-5",
+        "function": "Extends toes; dorsiflexes foot",
+        "nerve": "Deep fibular nerve (L4-L5)"
+    },
+    {
+        "muscle": "Extensor Hallucis Longus",
+        "origin": "Anterior surface of fibula",
+        "insertion": "Distal phalanx of great toe",
+        "function": "Extends great toe; dorsiflexes foot",
+        "nerve": "Deep fibular nerve (L4-L5)"
+    },
+    {
+        "muscle": "Fibularis Longus",
+        "origin": "Head and upper surface of fibula",
+        "insertion": "Medial cuneiform; base of 1st metatarsal",
+        "function": "Everts and plantar flexes foot",
+        "nerve": "Superficial fibular nerve (L5-S2)"
+    },
+    {
+        "muscle": "Fibularis Brevis",
+        "origin": "Lower surface of fibula",
+        "insertion": "Base of 5th metatarsal",
+        "function": "Everts and plantar flexes foot",
+        "nerve": "Superficial fibular nerve (L5-S2)"
+    },
+    {
+        "muscle": "Flexor Hallucis Longus",
+        "origin": "Lower two-thirds of posterior fibula",
+        "insertion": "Distal phalanx of great toe",
+        "function": "Flexes great toe; plantar flexes foot",
+        "nerve": "Tibial nerve (S2-S3)"
+    },
+    {
+        "muscle": "Flexor Digitorum Longus",
+        "origin": "Posterior surface of tibia",
+        "insertion": "Distal phalanges of toes 2-5",
+        "function": "Flexes toes; plantar flexes foot",
+        "nerve": "Tibial nerve (S2-S3)"
+    },
+    {
+        "muscle": "Tibialis Posterior",
+        "origin": "Posterior surface of tibia and fibula",
+        "insertion": "Navicular; cuneiforms; metatarsals 2-4",
+        "function": "Plantar flexes and inverts foot",
+        "nerve": "Tibial nerve (L4-L5)"
+    },
+    {
+     "muscle": "Abductor Hallucis (1st layer)",
+    "origin": "Medial process of calcaneal tuberosity",
+    "insertion": "Medial side of base of proximal phalanx of 1st toe",
+    "function": "Abducts and flexes the great toe",
+    "nerve": "Medial plantar nerve (S2-S3)"
+  },
+  {
+    "muscle": "Flexor Digitorum Brevis (1st layer)",
+    "origin": "Medial process of calcaneal tuberosity; plantar aponeurosis",
+    "insertion": "Middle phalanges of toes 2-5",
+    "function": "Flexes toes 2-5",
+    "nerve": "Medial plantar nerve (S2-S3)"
+  },
+  {
+    "muscle": "Abductor Digiti Minimi (1st layer)",
+    "origin": "Lateral process of calcaneal tuberosity",
+    "insertion": "Lateral side of base of proximal phalanx of 5th toe",
+    "function": "Abducts and flexes the 5th toe",
+    "nerve": "Lateral plantar nerve (S2-S3)"
+  },
+  {
+    "muscle": "Quadratus Plantae (2nd layer)",
+    "origin": "Medial and lateral sides of plantar surface of calcaneus",
+    "insertion": "Posterolateral margin of flexor digitorum longus tendon",
+    "function": "Assists flexor digitorum longus in flexing toes 2-5",
+    "nerve": "Lateral plantar nerve (S2-S3)"
+  },
+  {
+    "muscle": "Lumbricals (2nd layer)",
+    "origin": "Tendons of flexor digitorum longus",
+    "insertion": "Medial side of extensor expansions of toes 2-5",
+    "function": "Flexes toes 2-5 at the metatarsophalangeal joints; extends toes 2-5 at the interphalangeal joints",
+    "nerve": "Medial and lateral plantar nerves"
+  },
+  {
+    "muscle": "Flexor Hallucis Brevis (3rd layer)",
+    "origin": "Cuboid and lateral cuneiform bones",
+    "insertion": "Base of proximal phalanx of 1st toe (splits into medial and lateral heads)",
+    "function": "Flexes the great toe",
+    "nerve": "Medial plantar nerve (S2-S3)"
+  },
+  {
+    "muscle": "Adductor Hallucis (3rd layer)",
+    "origin": "Oblique head: Base of metatarsals 2-4; Transverse head: Ligaments of the metatarsophalangeal joints of toes 3-5",
+    "insertion": "Lateral side of base of proximal phalanx of 1st toe",
+    "function": "Adducts and assists in flexing the great toe",
+    "nerve": "Lateral plantar nerve (S2-S3)"
+  },
+  {
+    "muscle": "Flexor Digiti Minimi Brevis (3rd layer)",
+    "origin": "Base of 5th metatarsal bone",
+    "insertion": "Base of proximal phalanx of 5th toe",
+    "function": "Flexes the 5th toe",
+    "nerve": "Lateral plantar nerve (S2-S3)"
+  },
+  {
+    "muscle": "Plantar interossei (4th layer)",
+    "origin": "Medial sides of metatarsals 3-5",
+    "insertion": "Medial sides of proximal phalanges of toes 3-5",
+    "function": "Adducts toes 3-5; assists in flexing toes at the metatarsophalangeal joints",
+    "nerve": "Lateral plantar nerve (S2-S3)"
+  },
+  {
+    "muscle": "Dorsal interossei (4th layer)",
+    "origin": "Adjacent sides of metatarsals 1-5",
+    "insertion": "Proximal phalanges of toes 2-4",
+    "function": "Abducts toes 2-4; assists in flexing toes at the metatarsophalangeal joints",
+    "nerve": "Lateral plantar nerve (S2-S3)"
+  },
+  {
+    "muscle": "Extensor Digitorum Brevis (dorsum of foot)",
+    "origin": "Anterior part of calcaneus",
+    "insertion": "Extensor expansions of toes 1-4",
+    "function": "Extends toes 1-4",
+    "nerve": "Deep fibular nerve (L5-S1)"
+  },
+  {
+    "muscle": "Extensor Hallucis Brevis (dorsum of foot)",
+    "origin": "Anterior part of calcaneus",
+    "insertion": "Base of proximal phalanx of 1st toe",
+    "function": "Extends the great toe",
+    "nerve": "Deep fibular nerve (L5-S1)"
+  },
+];
+
+let currentIndex = 0;
+
+function generateFlashcards(indexOffset = 0) {
+    const flashcardContainer = document.getElementById('flashcardContainer');
+    flashcardContainer.innerHTML = '';
+
+    const startIndex = Math.max(0, currentIndex + indexOffset);
+    const endIndex = Math.min(startIndex + 3, muscleData.length * 4);
+
+    for (let i = startIndex; i < endIndex; i++) {
+        const data = muscleData[Math.floor(i / 4)];
+        const type = i % 4;
+
+        let question = '';
+        let answer = '';
+
+        switch (type) {
+            case 0:
+                question = `What is the origin of ${data.muscle}?`;
+                answer = data.origin;
+                break;
+            case 1:
+                question = `What is the insertion of ${data.muscle}?`;
+                answer = data.insertion;
+                break;
+            case 2:
+                question = `What nerve innervates the ${data.muscle}?`;
+                answer = data.nerve;
+                break;
+            case 3:
+                question = `What is the function of ${data.muscle}?`;
+                answer = data.function;
+                break;
+        }
+
+        createFlashcard(flashcardContainer, question, answer);
+    }
+
+    currentIndex = startIndex;
+}
+
+function randomizeFlashcards() {
+    const flashcardContainer = document.getElementById('flashcardContainer');
+    flashcardContainer.innerHTML = '';
+
+    const usedIndexes = new Set();
+
+    while (usedIndexes.size < 3) {
+        const randomIndex = Math.floor(Math.random() * muscleData.length * 4);
+        if (!usedIndexes.has(randomIndex)) {
+            usedIndexes.add(randomIndex);
+
+            const data = muscleData[Math.floor(randomIndex / 4)];
+            const type = randomIndex % 4;
+
+            let question = '';
+            let answer = '';
+
+            switch (type) {
+                case 0:
+                    question = `What is the origin of ${data.muscle}?`;
+                    answer = data.origin;
+                    break;
+                case 1:
+                    question = `What is the insertion of ${data.muscle}?`;
+                    answer = data.insertion;
+                    break;
+                case 2:
+                    question = `What nerve innervates the ${data.muscle}?`;
+                    answer = data.nerve;
+                    break;
+                case 3:
+                    question = `What is the function of ${data.muscle}?`;
+                    answer = data.function;
+                    break;
+            }
+
+            createFlashcard(flashcardContainer, question, answer);
+        }
+    }
+}
+
+function createFlashcard(container, question, answer) {
+    const flashcard = document.createElement('div');
+    flashcard.classList.add('flashcard');
+
+    const questionElement = document.createElement('div');
+    questionElement.classList.add('question');
+    questionElement.innerText = question;
+
+    const answerElement = document.createElement('div');
+    answerElement.classList.add('answer');
+    answerElement.innerText = answer;
+
+    flashcard.appendChild(questionElement);
+    flashcard.appendChild(answerElement);
+
+    flashcard.addEventListener('click', () => {
+        answerElement.classList.toggle('show');
+    });
+
+    container.appendChild(flashcard);
+}
+
+document.getElementById('nextButton').addEventListener('click', () => generateFlashcards(3));
+document.getElementById('prevButton').addEventListener('click', () => generateFlashcards(-3));
+document.getElementById('randomButton').addEventListener('click', randomizeFlashcards);
+
+// Generate the initial set of flashcards
+generateFlashcards();
+</script>
+
+</body>
+</html>
